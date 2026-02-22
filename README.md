@@ -32,6 +32,45 @@ Add to your Claude Code MCP configuration (`.claude/settings.json` or `~/.claude
 
 Auth variables injected via the `env` block take precedence over the local `.env` file.
 
+### Via Gemini CLI
+
+Add to your Gemini CLI MCP configuration (`~/.gemini/settings.json` globally or `.gemini/settings.json` per project):
+
+```json
+{
+  "mcpServers": {
+    "jira-worker-mcp": {
+      "command": "npx",
+      "args": ["jira-worker-mcp"],
+      "env": {
+        "JIRA_BASE_URL": "$JIRA_BASE_URL",
+        "JIRA_EMAIL": "$JIRA_EMAIL",
+        "JIRA_API_TOKEN": "$JIRA_API_TOKEN"
+      }
+    }
+  }
+}
+```
+
+Env vars use `$VAR_NAME` syntax and are substituted from your shell environment at runtime. Alternatively, use the CLI shortcut:
+
+```bash
+gemini mcp add jira-worker-mcp npx jira-worker-mcp
+```
+
+### Via OpenAI Codex CLI
+
+Add to your Codex CLI MCP configuration (`~/.codex/config.toml` globally or `.codex/config.toml` per project):
+
+```toml
+[mcp_servers.jira-worker-mcp]
+command = "npx"
+args    = ["jira-worker-mcp"]
+env     = { JIRA_BASE_URL = "${JIRA_BASE_URL}", JIRA_EMAIL = "${JIRA_EMAIL}", JIRA_API_TOKEN = "${JIRA_API_TOKEN}" }
+```
+
+Env vars use `"${VAR_NAME}"` syntax and are substituted from your shell environment at runtime.
+
 ### Local development
 
 ```bash
