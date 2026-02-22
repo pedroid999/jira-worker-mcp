@@ -1,0 +1,7 @@
+src/
+.env
+.env.*
+!.env.example
+.claude/
+tsconfig.json
+*.map

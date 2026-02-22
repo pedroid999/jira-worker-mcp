@@ -1,0 +1,33 @@
+{
+  "name": "jira-worker-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Jira REST API v3",
+  "author": "pedro.nieto",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pedroid999/jira-worker-mcp"
+  },
+  "keywords": ["mcp", "jira", "atlassian", "model-context-protocol", "claude", "ai-tools", "jira-api"],
+  "engines": { "node": ">=18.0.0" },
+  "type": "module",
+  "bin": { "jira-worker-mcp": "./dist/index.js" },
+  "scripts": {
+    "build": "tsc",
+    "postbuild": "chmod +x dist/index.js",
+    "prepublishOnly": "npm run build",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch"
+  },
+  "files": ["dist"],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  }
+}
