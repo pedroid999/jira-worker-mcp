@@ -44,13 +44,19 @@ export const GetIssueTypesSchema = z.object({
 });
 
 export const UpdateIssueSchema = CommonIssueFieldsSchema.extend({
-  issueKey: z.string().describe('Jira issue key to update (e.g., "PROJ-123")'),
+  issueKey: z
+    .string()
+    .regex(/^[A-Z][A-Z0-9_]+-\d+$/, 'Invalid Jira issue key format (expected e.g. PROJ-123)')
+    .describe('Jira issue key to update (e.g., "PROJ-123")'),
   summary: z.string().optional().describe('New summary/title for the issue'),
   description: z.string().optional().describe('New description (supports Markdown)'),
 });
 
 export const AddCommentSchema = z.object({
-  issueKey: z.string().describe('Jira issue key to comment on (e.g., "PROJ-123")'),
+  issueKey: z
+    .string()
+    .regex(/^[A-Z][A-Z0-9_]+-\d+$/, 'Invalid Jira issue key format (expected e.g. PROJ-123)')
+    .describe('Jira issue key to comment on (e.g., "PROJ-123")'),
   body: z.string().describe('Comment body (supports Markdown)'),
 });
 
