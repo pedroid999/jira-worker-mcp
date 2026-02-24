@@ -38,6 +38,22 @@ interface AdfDoc {
 
 // ─── ADF Converter ───────────────────────────────────────────────────────────
 
+function isTableRow(line: string): boolean {
+  return line.trim().startsWith('|');
+}
+
+function isSeparatorRow(line: string): boolean {
+  return /^\|[\s|:-]+\|$/.test(line.trim());
+}
+
+function parseTableRow(line: string): string[] {
+  return line
+    .trim()
+    .replace(/^\||\|$/g, '')
+    .split('|')
+    .map(cell => cell.trim());
+}
+
 function parseInline(text: string): AdfInlineNode[] {
   const nodes: AdfInlineNode[] = [];
   // Regex captures: **bold**, *em*, _em_, `code`, plain
@@ -138,6 +154,36 @@ export function toADF(text: string): AdfDoc {
         i++;
       }
       content.push({ type: 'orderedList', content: items });
+      continue;
+    }
+
+    // Markdown table
+    if (isTableRow(line)) {
+      const tableLines: string[] = [];
+      while (i < lines.length && isTableRow(lines[i])) {
+        tableLines.push(lines[i]);
+        i++;
+      }
+
+      const rows: AdfBlockNode[] = [];
+      tableLines.forEach((tLine, rowIdx) => {
+        if (isSeparatorRow(tLine)) return;
+
+        const cellType = rowIdx === 0 ? 'tableHeader' : 'tableCell';
+        const cells = parseTableRow(tLine).map(cellText => ({
+          type: cellType,
+          attrs: {},
+          content: [{ type: 'paragraph', content: parseInline(cellText) }],
+        }));
+
+        rows.push({ type: 'tableRow', content: cells });
+      });
+
+      content.push({
+        type: 'table',
+        attrs: { isNumberColumnEnabled: false, layout: 'default' },
+        content: rows,
+      });
       continue;
     }
 
