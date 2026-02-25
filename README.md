@@ -19,7 +19,7 @@ Add to your Claude Code MCP configuration (`.claude/settings.json` or `~/.claude
   "mcpServers": {
     "jira-worker-mcp": {
       "command": "npx",
-      "args": ["jira-worker-mcp"],
+      "args": ["-y", "jira-worker-mcp"],
       "env": {
         "JIRA_BASE_URL": "https://yourcompany.atlassian.net",
         "JIRA_EMAIL": "user@example.com",
@@ -41,7 +41,7 @@ Add to your Gemini CLI MCP configuration (`~/.gemini/settings.json` globally or 
   "mcpServers": {
     "jira-worker-mcp": {
       "command": "npx",
-      "args": ["jira-worker-mcp"],
+      "args": ["-y", "jira-worker-mcp"],
       "env": {
         "JIRA_BASE_URL": "$JIRA_BASE_URL",
         "JIRA_EMAIL": "$JIRA_EMAIL",
@@ -55,7 +55,7 @@ Add to your Gemini CLI MCP configuration (`~/.gemini/settings.json` globally or 
 Env vars use `$VAR_NAME` syntax and are substituted from your shell environment at runtime. Alternatively, use the CLI shortcut:
 
 ```bash
-gemini mcp add jira-worker-mcp npx jira-worker-mcp
+gemini mcp add jira-worker-mcp npx -y jira-worker-mcp
 ```
 
 ### Via OpenAI Codex CLI
@@ -65,7 +65,7 @@ Add to your Codex CLI MCP configuration (`~/.codex/config.toml` globally or `.co
 ```toml
 [mcp_servers.jira-worker-mcp]
 command = "npx"
-args    = ["jira-worker-mcp"]
+args    = ["-y", "jira-worker-mcp"]
 env     = { JIRA_BASE_URL = "${JIRA_BASE_URL}", JIRA_EMAIL = "${JIRA_EMAIL}", JIRA_API_TOKEN = "${JIRA_API_TOKEN}" }
 ```
 
