@@ -67,6 +67,19 @@ export type GetIssueTypesParams = z.infer<typeof GetIssueTypesSchema>;
 export type UpdateIssueParams = z.infer<typeof UpdateIssueSchema>;
 export type AddCommentParams = z.infer<typeof AddCommentSchema>;
 
+export const GetIssueSchema = z.object({
+  issueKey: z
+    .string()
+    .regex(/^[A-Z][A-Z0-9_]+-\d+$/, 'Invalid Jira issue key format (expected e.g. PROJ-123)')
+    .describe('Jira issue key to retrieve (e.g., "PROJ-123")'),
+  fields: z
+    .array(z.string())
+    .optional()
+    .describe('Optional list of field names to return (returns all if omitted)'),
+});
+
+export type GetIssueParams = z.infer<typeof GetIssueSchema>;
+
 export interface JiraProject {
   id: string;
   key: string;
@@ -98,4 +111,42 @@ export interface UpdateIssueResult {
 export interface AddCommentResult {
   id: string;
   url: string;
+}
+
+export interface GetIssueComment {
+  id: string;
+  author: string | null;
+  body: string;
+  created: string;
+}
+
+export interface GetIssueSubtask {
+  key: string;
+  summary: string;
+  status: string;
+}
+
+export interface GetIssueResult {
+  key: string;
+  id: string;
+  url: string;
+  summary: string;
+  status: string;
+  issueType: string;
+  priority: string | null;
+  assignee: string | null;
+  reporter: string | null;
+  labels: string[];
+  components: string[];
+  description: string;
+  comments: GetIssueComment[];
+  subtasks: GetIssueSubtask[];
+  storyPoints: number | null;
+  epicLink: string | null;
+  sprint: string | null;
+  fixVersions: string[];
+  dueDate: string | null;
+  resolution: string | null;
+  created: string;
+  updated: string;
 }
