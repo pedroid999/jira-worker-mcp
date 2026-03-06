@@ -8,6 +8,7 @@ import { register as registerGetProjects } from './tools/get-projects.js';
 import { register as registerGetIssueTypes } from './tools/get-issue-types.js';
 import { register as registerUpdateIssue } from './tools/update-issue.js';
 import { register as registerAddComment } from './tools/add-comment.js';
+import { register as registerGetIssue } from './tools/get-issue.js';
 
 const client = new JiraClient();
 const server = new McpServer({ name: 'jira-worker-mcp', version: '1.0.0' });
@@ -17,6 +18,7 @@ registerGetProjects(server, client);
 registerGetIssueTypes(server, client);
 registerUpdateIssue(server, client);
 registerAddComment(server, client);
+registerGetIssue(server, client);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);

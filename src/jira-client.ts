@@ -5,6 +5,9 @@ import type {
   CreateIssueResult,
   UpdateIssueResult,
   AddCommentResult,
+  GetIssueResult,
+  GetIssueComment,
+  GetIssueSubtask,
   CommonIssueFields,
 } from './types.js';
 
@@ -290,6 +293,23 @@ export function buildFields(
   return fields;
 }
 
+// ─── ADF Text Extractor ─────────────────────────────────────────────────────
+
+export function extractTextFromADF(adf: unknown): string {
+  if (!adf || typeof adf !== 'object') return '';
+  const node = adf as Record<string, unknown>;
+  const parts: string[] = [];
+  if (typeof node['text'] === 'string') {
+    parts.push(node['text']);
+  }
+  if (Array.isArray(node['content'])) {
+    for (const child of node['content']) {
+      parts.push(extractTextFromADF(child));
+    }
+  }
+  return parts.join('');
+}
+
 // ─── JiraClient ──────────────────────────────────────────────────────────────
 
 export class JiraClient {
@@ -448,6 +468,92 @@ export class JiraClient {
       throw new Error(
         `Failed to get issue types for ${projectKey}: ${this.extractJiraError(error)}`,
       );
+    }
+  }
+
+  async getIssue(issueKey: string, fields?: string[]): Promise<GetIssueResult> {
+    try {
+      const params: Record<string, string> = {};
+      if (fields?.length) {
+        params['fields'] = fields.join(',');
+      }
+
+      const response = await this.http.get<Record<string, unknown>>(
+        `/rest/api/3/issue/${issueKey}`,
+        { params },
+      );
+
+      const data = response.data;
+      const f = (data['fields'] as Record<string, unknown>) || {};
+
+      const comments: GetIssueComment[] = [];
+      const commentData = f['comment'] as
+        | { comments?: Array<Record<string, unknown>> }
+        | undefined;
+      if (commentData?.comments) {
+        for (const c of commentData.comments) {
+          comments.push({
+            id: String(c['id'] ?? ''),
+            author:
+              ((c['author'] as Record<string, unknown>)?.['displayName'] as string) ?? null,
+            body: extractTextFromADF(c['body']),
+            created: String(c['created'] ?? ''),
+          });
+        }
+      }
+
+      const subtasks: GetIssueSubtask[] = [];
+      if (Array.isArray(f['subtasks'])) {
+        for (const s of f['subtasks'] as Array<Record<string, unknown>>) {
+          const sf = (s['fields'] as Record<string, unknown>) || {};
+          subtasks.push({
+            key: String(s['key'] ?? ''),
+            summary: String(sf['summary'] ?? ''),
+            status: ((sf['status'] as Record<string, unknown>)?.['name'] as string) ?? '',
+          });
+        }
+      }
+
+      return {
+        key: String(data['key'] ?? ''),
+        id: String(data['id'] ?? ''),
+        url: `${this.baseUrl}/browse/${data['key']}`,
+        summary: String(f['summary'] ?? ''),
+        status: ((f['status'] as Record<string, unknown>)?.['name'] as string) ?? '',
+        issueType: ((f['issuetype'] as Record<string, unknown>)?.['name'] as string) ?? '',
+        priority: ((f['priority'] as Record<string, unknown>)?.['name'] as string) ?? null,
+        assignee: ((f['assignee'] as Record<string, unknown>)?.['displayName'] as string) ?? null,
+        reporter: ((f['reporter'] as Record<string, unknown>)?.['displayName'] as string) ?? null,
+        labels: Array.isArray(f['labels']) ? (f['labels'] as string[]) : [],
+        components: Array.isArray(f['components'])
+          ? (f['components'] as Array<Record<string, unknown>>).map((c) => String(c['name'] ?? ''))
+          : [],
+        description: extractTextFromADF(f['description']),
+        comments,
+        subtasks,
+        storyPoints: (f['customfield_10016'] as number) ?? null,
+        epicLink: (f['customfield_10014'] as string) ?? null,
+        sprint:
+          ((f['customfield_10020'] as Record<string, unknown>)?.['name'] as string) ?? null,
+        fixVersions: Array.isArray(f['fixVersions'])
+          ? (f['fixVersions'] as Array<Record<string, unknown>>).map(
+              (v) => String(v['name'] ?? ''),
+            )
+          : [],
+        dueDate: (f['duedate'] as string) ?? null,
+        resolution:
+          ((f['resolution'] as Record<string, unknown>)?.['name'] as string) ?? null,
+        created: String(f['created'] ?? ''),
+        updated: String(f['updated'] ?? ''),
+      };
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 404) {
+        throw new Error(`Issue ${issueKey} not found`);
+      }
+      if (error instanceof AxiosError && error.response?.status === 403) {
+        throw new Error(`Permission denied for issue ${issueKey}`);
+      }
+      throw new Error(`Failed to get issue ${issueKey}: ${this.extractJiraError(error)}`);
     }
   }
 
